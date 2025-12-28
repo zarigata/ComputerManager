@@ -76,7 +76,8 @@ class OllamaClient:
         model: str, 
         messages: List[Dict[str, str]], 
         stream: bool = False,
-        options: Optional[Dict[str, Any]] = None
+        options: Optional[Dict[str, Any]] = None,
+        tools: Optional[List[Dict[str, Any]]] = None
     ) -> Union[Dict[str, Any], AsyncGenerator[Dict[str, Any], None]]:
         """
         Send a chat request to the model
@@ -86,12 +87,22 @@ class OllamaClient:
             messages: List of message objects {'role': 'user/assistant/system', 'content': '...'}
             stream: Whether to stream the response
             options: Additional model parameters (temperature, etc.)
+            tools: Optional list of tool schemas for function calling
         """
         try:
+            kwargs = {
+                'model': model,
+                'messages': messages,
+                'stream': stream,
+                'options': options
+            }
+            if tools is not None:
+                kwargs['tools'] = tools
+            
             if stream:
-                return await self.client.chat(model=model, messages=messages, stream=True, options=options)
+                return await self.client.chat(**kwargs)
             else:
-                return await self.client.chat(model=model, messages=messages, stream=False, options=options)
+                return await self.client.chat(**kwargs)
         except httpx.ConnectError:
             raise OllamaConnectionError(f"Connection failed during chat with {model}")
         except Exception as e:
@@ -107,7 +118,8 @@ class OllamaClient:
         system: Optional[str] = None,
         images: Optional[List[Union[str, bytes]]] = None,
         stream: bool = False,
-        options: Optional[Dict[str, Any]] = None
+        options: Optional[Dict[str, Any]] = None,
+        tools: Optional[List[Dict[str, Any]]] = None
     ) -> Union[Dict[str, Any], AsyncGenerator[Dict[str, Any], None]]:
         """
         Send a generation request to the model
@@ -119,26 +131,24 @@ class OllamaClient:
             images: Optional list of images (file paths or bytes)
             stream: Whether to stream the response
             options: Additional model parameters
+            tools: Optional list of tool schemas for function calling
         """
         try:
+            kwargs = {
+                'model': model,
+                'prompt': prompt,
+                'system': system,
+                'images': images,
+                'stream': stream,
+                'options': options
+            }
+            if tools is not None:
+                kwargs['tools'] = tools
+            
             if stream:
-                return await self.client.generate(
-                    model=model, 
-                    prompt=prompt, 
-                    system=system, 
-                    images=images, 
-                    stream=True, 
-                    options=options
-                )
+                return await self.client.generate(**kwargs)
             else:
-                return await self.client.generate(
-                    model=model, 
-                    prompt=prompt, 
-                    system=system, 
-                    images=images, 
-                    stream=False, 
-                    options=options
-                )
+                return await self.client.generate(**kwargs)
         except httpx.ConnectError:
             raise OllamaConnectionError(f"Connection failed during generation with {model}")
         except Exception as e:
@@ -212,3 +222,30 @@ class OllamaClient:
             status["errors"].append(str(e))
             
         return status
+    
+    async def chat_with_tools(
+        self,
+        model: str,
+        messages: List[Dict[str, str]],
+        tool_registry,  # Type hint would be circular, so we use duck typing
+        stream: bool = False,
+        options: Optional[Dict[str, Any]] = None
+    ) -> Union[Dict[str, Any], AsyncGenerator[Dict[str, Any], None]]:
+        """
+        Send a chat request with tools from a ToolRegistry
+        
+        Args:
+            model: Name of the model to use
+            messages: List of message objects
+            tool_registry: ToolRegistry instance to get tools from
+            stream: Whether to stream the response
+            options: Additional model parameters
+        """
+        tools = tool_registry.get_tools_schema()
+        return await self.chat(
+            model=model,
+            messages=messages,
+            stream=stream,
+            options=options,
+            tools=tools if tools else None
+        )

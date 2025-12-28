@@ -34,9 +34,10 @@ class ChatWindow(QMainWindow):
     streaming_finished = pyqtSignal()
     error_occurred = pyqtSignal(str)
     
-    def __init__(self, ollama_client: OllamaClient):
+    def __init__(self, ollama_client: OllamaClient, agent=None):
         super().__init__()
         self.ollama_client = ollama_client
+        self.agent = agent  # Optional Agent instance
         self.config = get_config()
         self.conversation_history: List[Dict[str, str]] = []
         self.current_response = ""
@@ -45,7 +46,8 @@ class ChatWindow(QMainWindow):
         self._init_ui()
         self._connect_signals()
         
-        logger.info("Chat window initialized")
+        mode = "Agent Mode" if self.agent else "Direct Mode"
+        logger.info(f"Chat window initialized in {mode}")
     
     def _init_ui(self):
         """Initialize the user interface."""
@@ -53,8 +55,8 @@ class ChatWindow(QMainWindow):
         
         # Restore window geometry or set default
         self.resize(
-            self.config.gui_settings.get("window_width", 800),
-            self.config.gui_settings.get("window_height", 600)
+            self.config.window_width,
+            self.config.window_height
         )
         self.setMinimumSize(600, 400)
         
@@ -194,20 +196,36 @@ class ChatWindow(QMainWindow):
         self.streaming_started.emit()
         
         try:
-            self.current_response = ""
-            
-            # Stream response from Ollama
-            async for chunk in self.ollama_client.chat(
-                model=self.config.text_model,
-                messages=self.conversation_history,
-                stream=True
-            ):
-                if chunk:
-                    self.current_response += chunk
-                    self.message_chunk_received.emit(chunk)
-            
-            # Add complete response to history
-            self.add_assistant_message(self.current_response)
+            if self.agent:
+                # Agent mode: use agent for processing (non-streaming)
+                self._show_tool_execution("Processing with agent...")
+                response = await self.agent.process_message(user_message)
+                
+                # Display the complete response
+                self.current_response = response
+                self.message_chunk_received.emit(response)
+                
+                # Add to history (agent manages its own history internally)
+                # We don't need to add to self.conversation_history as agent handles it
+            else:
+                # Direct mode: stream response from Ollama
+                self.current_response = ""
+                
+                # Stream response from Ollama
+                async for chunk in self.ollama_client.chat(
+                    model=self.config.default_text_model,
+                    messages=self.conversation_history,
+                    stream=True
+                ):
+                    # Parse chunk dict from Ollama - extract content string
+                    if chunk:
+                        content = chunk.get('message', {}).get('content', '')
+                        if content:
+                            self.current_response += content
+                            self.message_chunk_received.emit(content)
+                
+                # Add complete response to history
+                self.add_assistant_message(self.current_response)
             
         except OllamaConnectionError as e:
             logger.error(f"Ollama connection error: {e}")
@@ -347,11 +365,16 @@ class ChatWindow(QMainWindow):
             self.model_label.setText(f"Model: {self.config.text_model}")
             logger.info("Settings updated")
     
+    def _show_tool_execution(self, message: str):
+        """Show tool execution indicator."""
+        self.status_label.setText(message)
+        self.status_label.setStyleSheet("color: #ff8c00;")
+    
     def closeEvent(self, event):
         """Handle window close event."""
         # Save window geometry
-        self.config.gui_settings["window_width"] = self.width()
-        self.config.gui_settings["window_height"] = self.height()
+        self.config.window_width = self.width()
+        self.config.window_height = self.height()
         
         # Let system tray handle the close behavior
         event.ignore()

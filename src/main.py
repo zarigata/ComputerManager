@@ -18,13 +18,15 @@ from src.utils.system_info import SystemDetector
 from src.ollama.client import OllamaClient, OllamaConnectionError
 from src.ollama.model_manager import ModelManager
 from src.gui import ChatWindow, SystemTrayManager, apply_theme, detect_system_theme
+from src.agent import Agent, get_tool_registry, initialize_builtin_tools
+from src.automation import register_file_tools, register_app_control_tools, register_screen_tools, register_keyboard_mouse_tools
+from src.ollama.vision import register_vision_tools
 
-# Configure logging
+# Configure basic logging (file handler will be added after config init)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(Path.home() / ".computer_manager" / "logs" / "app.log"),
         logging.StreamHandler()
     ]
 )
@@ -134,11 +136,18 @@ def main():
         
         # Load configuration
         config = get_config()
+        
+        # Add file handler now that config is loaded and log_dir exists
+        log_file = config.log_dir / "app.log"
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        logging.getLogger().addHandler(file_handler)
+        
         logger.info("Configuration loaded")
         
         # Detect and apply theme
-        theme = config.gui_settings.get("theme", "System")
-        if theme == "System":
+        theme = config.theme if config.theme else "system"
+        if theme.lower() == "system":
             # Auto-detect system theme
             detected_theme = detect_system_theme()
             logger.info(f"Detected system theme: {detected_theme}")
@@ -163,14 +172,38 @@ def main():
                 logger.info("Application startup cancelled by user")
                 return 0
             
-            # Create main window
-            chat_window = ChatWindow(ollama_client)
+            # Initialize agent framework if enabled
+            agent = None
+            if config.agent_enabled:
+                logger.info("Initializing agent framework...")
+                initialize_builtin_tools()
+                register_file_tools()
+                register_app_control_tools()
+                register_screen_tools()
+                register_keyboard_mouse_tools()
+                register_vision_tools()
+                registry = get_tool_registry()
+                logger.info(f"Registered {len(registry)} tools")
+                
+                agent = Agent(
+                    ollama_client=ollama_client,
+                    tool_registry=registry,
+                    model=config.default_text_model,
+                    max_iterations=config.agent_max_iterations,
+                    system_prompt=config.agent_system_prompt
+                )
+                logger.info("Agent initialized successfully")
+            else:
+                logger.info("Agent framework disabled")
+            
+            # Create main window with optional agent
+            chat_window = ChatWindow(ollama_client, agent=agent)
             
             # Create system tray
             system_tray = SystemTrayManager(chat_window)
             
             # Show window (unless start minimized is enabled)
-            if config.gui_settings.get("start_minimized", False):
+            if config.start_minimized:
                 chat_window.hide()
                 system_tray.show_notification(
                     "Computer Manager",

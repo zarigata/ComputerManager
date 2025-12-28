@@ -12,9 +12,86 @@ We believe in **Data Sovereignty**. We are not evil bureaucrats. We don't collec
 
 *   **🔒 Privacy First & "Null Data" Policy**: No telemetry, no cloud processing, no spying. Your data stays on your SSD.
 *   **🤖 Local AI Intelligence**: Leverages the power of Ollama (Llama 3, Mistral, Gemma) to understand natural language commands.
+*   **🛠️ Agent Framework with Tool Calling**: AI can execute functions and gather system information autonomously.
 *   **👁️ Visual Understanding**: Capable of "seeing" your screen to provide context-aware assistance (requires Vision models).
 *   **⚡ Completely Autonomous**: Can organize files, manage system settings, and automate workflows.
 *   **🐧 Cross-Platform**: Run it on Windows, Linux, or macOS.
+
+## 🤖 Agent Capabilities
+
+The agent framework enables the AI to use tools for enhanced functionality:
+
+### Built-in Tools
+
+*   **Echo Tool**: Testing and verification
+*   **Get Time Tool**: Current date and time in various formats
+*   **Get System Info Tool**: Hardware information (CPU, RAM, GPU, hardware tier)
+
+### How It Works
+
+1. You send a message to the AI
+2. The AI determines which tools (if any) are needed
+3. Tools are executed automatically
+4. Results are fed back to the AI
+5. The AI provides a final response with the gathered information
+
+The agent can execute up to 10 tool calls in a single conversation turn, enabling complex multi-step operations.
+
+## 🔧 Automation Features
+
+Computer Manager includes powerful automation capabilities through specialized tools:
+
+### File Operations
+- **Read/Write Files**: Read file contents or write/append to files with automatic directory creation
+- **Delete/Move Files**: Safely delete or move files with comprehensive error handling
+- **List Directories**: Browse directory contents with optional recursive listing and pattern matching
+- **Search Files**: Find files by pattern with metadata (size, modified time)
+- **File Information**: Get detailed metadata including permissions, timestamps, and file type
+
+### Process Management
+- **Launch Applications**: Start applications with custom arguments
+- **List Processes**: View running processes with optional filtering and detailed information
+- **Kill Processes**: Terminate processes by PID or name (with graceful shutdown)
+- **Process Information**: Get detailed process stats including CPU, memory, and command line
+
+### Web Browsing
+- **Open URLs**: Open websites in your default browser
+- **Web Search**: Search Google, Bing, or DuckDuckGo directly from commands
+
+### Screen Capture
+- **Capture Screenshots**: Take full screen or region screenshots with customizable quality
+- **Get Screen Size**: Retrieve screen dimensions for coordinate calculations
+- **Locate Images**: Find UI elements on screen using image recognition
+- **Get Pixel Color**: Sample colors at specific screen coordinates for automation logic
+
+### Keyboard & Mouse Control
+- **Move Mouse**: Move cursor to absolute or relative coordinates with smooth animation
+- **Click Mouse**: Perform single, double, or triple clicks with any mouse button
+- **Scroll Mouse**: Scroll up or down at current or specified position
+- **Type Text**: Type text with configurable keystroke intervals
+- **Press Keys**: Press special keys (Enter, Tab, arrows, function keys, etc.)
+- **Execute Hotkeys**: Trigger keyboard shortcuts (Ctrl+C, Alt+Tab, etc.)
+- **Drag Mouse**: Perform drag-and-drop operations
+
+**Safety Features**: All automation tools include failsafe mechanism (move mouse to corner to abort), automatic delays, coordinate validation, and comprehensive logging.
+
+### Example Commands
+- *"Create a file called notes.txt with my meeting notes"*
+- *"List all Python files in my projects directory"*
+- *"Launch notepad"*
+- *"Show me all running Chrome processes"*
+- *"Search Google for Python automation tutorials"*
+- *"Open https://github.com in my browser"*
+- *"Take a screenshot of my screen"*
+- *"Click at position 500, 300"*
+- *"Type 'Hello World' and press Enter"*
+- *"Press Ctrl+C to copy"*
+
+**Security Note**: File operations validate paths and handle permissions errors gracefully. High-risk operations should be reviewed before execution. Keyboard/mouse automation includes failsafe protection.
+
+### Creating Custom Tools
+
+Developers can extend functionality by creating custom tools. See [docs/AGENT_ARCHITECTURE.md](docs/AGENT_ARCHITECTURE.md) for the complete guide.
 
 ## ✊ Why Computer Manager?
 
@@ -39,6 +116,9 @@ Since this runs **locally**, your hardware dictates performance.
     *   Windows/Mac: [Download from ollama.com](https://ollama.com)
     *   Linux: `curl -fsSL https://ollama.com/install.sh | sh`
 2.  **Modern OS**: Windows 10/11, macOS 12+, or a modern Linux distro.
+3.  **Platform-Specific Dependencies**:
+    *   **Linux**: `sudo apt-get install python3-tk python3-dev` (required for PyAutoGUI)
+    *   **macOS**: May require accessibility permissions in System Preferences → Security & Privacy → Privacy → Accessibility (for keyboard/mouse automation)
 
 ## 💾 Installation
 
@@ -98,6 +178,11 @@ OLLAMA_HOST=http://localhost:11434
 # Choose your weapon (Model)
 DEFAULT_TEXT_MODEL=llama3
 DEFAULT_VISION_MODEL=llava
+
+# Agent Configuration
+AGENT_ENABLED=true
+AGENT_MAX_ITERATIONS=10
+TOOL_EXECUTION_TIMEOUT=30
 
 # Safety First
 REQUIRE_CONFIRMATION=true

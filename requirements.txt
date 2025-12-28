@@ -20,6 +20,7 @@ python-dotenv>=1.0.0
 # Automation (for future phases)
 PyAutoGUI>=0.9.54
 pyperclip>=1.8.2
+opencv-python>=4.8.0  # Required for confidence-based image matching
 
 # Platform-specific (optional, installed conditionally)
 pyuac>=0.0.3; sys_platform == 'win32'  # Windows UAC elevation

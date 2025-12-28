@@ -36,6 +36,8 @@ class AppConfig:
     window_width: int = 800
     window_height: int = 600
     theme: str = "system"  # system, light, dark
+    start_minimized: bool = False
+    close_to_tray: bool = True
     
     # Security Configuration
     require_confirmation: bool = True
@@ -47,11 +49,23 @@ class AppConfig:
     screenshot_quality: int = 85
     automation_delay_ms: int = 100
     failsafe_enabled: bool = True
+    sensitive_actions_require_confirmation: bool = True
+    
+    # Vision Configuration
+    vision_detail_level: str = "detailed"  # brief, detailed, comprehensive
+    vision_analysis_timeout: int = 60  # seconds
+    auto_cleanup_screenshots: bool = True
     
     # Advanced Configuration
     debug_mode: bool = False
     log_level: str = "INFO"
     max_chat_history: int = 100
+    
+    # Agent Configuration
+    agent_enabled: bool = True
+    agent_max_iterations: int = 10
+    agent_system_prompt: Optional[str] = None
+    tool_execution_timeout: int = 30
     
     # Paths
     config_dir: Path = field(default_factory=lambda: Path.home() / ".computer-manager")
@@ -100,6 +114,8 @@ class ConfigManager:
         self.config.window_width = int(os.getenv("WINDOW_WIDTH", self.config.window_width))
         self.config.window_height = int(os.getenv("WINDOW_HEIGHT", self.config.window_height))
         self.config.theme = os.getenv("THEME", self.config.theme)
+        self.config.start_minimized = os.getenv("START_MINIMIZED", "false").lower() == "true"
+        self.config.close_to_tray = os.getenv("CLOSE_TO_TRAY", "true").lower() == "true"
         
         self.config.require_confirmation = os.getenv("REQUIRE_CONFIRMATION", "true").lower() == "true"
         self.config.permission_level = os.getenv("PERMISSION_LEVEL", self.config.permission_level)
@@ -109,10 +125,22 @@ class ConfigManager:
         self.config.screenshot_quality = int(os.getenv("SCREENSHOT_QUALITY", self.config.screenshot_quality))
         self.config.automation_delay_ms = int(os.getenv("AUTOMATION_DELAY_MS", self.config.automation_delay_ms))
         self.config.failsafe_enabled = os.getenv("FAILSAFE_ENABLED", "true").lower() == "true"
+        self.config.sensitive_actions_require_confirmation = os.getenv("SENSITIVE_ACTIONS_REQUIRE_CONFIRMATION", "true").lower() == "true"
+        
+        # Vision Configuration
+        self.config.vision_detail_level = os.getenv("VISION_DETAIL_LEVEL", self.config.vision_detail_level)
+        self.config.vision_analysis_timeout = int(os.getenv("VISION_ANALYSIS_TIMEOUT", self.config.vision_analysis_timeout))
+        self.config.auto_cleanup_screenshots = os.getenv("AUTO_CLEANUP_SCREENSHOTS", "true").lower() == "true"
         
         self.config.debug_mode = os.getenv("DEBUG_MODE", "false").lower() == "true"
         self.config.log_level = os.getenv("LOG_LEVEL", self.config.log_level)
         self.config.max_chat_history = int(os.getenv("MAX_CHAT_HISTORY", self.config.max_chat_history))
+        
+        # Agent Configuration
+        self.config.agent_enabled = os.getenv("AGENT_ENABLED", "true").lower() == "true"
+        self.config.agent_max_iterations = int(os.getenv("AGENT_MAX_ITERATIONS", self.config.agent_max_iterations))
+        self.config.agent_system_prompt = os.getenv("AGENT_SYSTEM_PROMPT")
+        self.config.tool_execution_timeout = int(os.getenv("TOOL_EXECUTION_TIMEOUT", self.config.tool_execution_timeout))
         
         # Paths - allow overriding via env
         if os.getenv("MODEL_CACHE_DIR"):

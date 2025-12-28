@@ -221,15 +221,15 @@ class SettingsDialog(QDialog):
     def _load_current_settings(self):
         """Load current settings from config."""
         # General tab
-        theme = self.config.gui_settings.get("theme", "System")
+        theme = self.config.theme.capitalize() if self.config.theme else "System"
         index = self.theme_combo.findText(theme)
         if index >= 0:
             self.theme_combo.setCurrentIndex(index)
         
-        self.window_width_spin.setValue(self.config.gui_settings.get("window_width", 800))
-        self.window_height_spin.setValue(self.config.gui_settings.get("window_height", 600))
-        self.start_minimized_check.setChecked(self.config.gui_settings.get("start_minimized", False))
-        self.close_to_tray_check.setChecked(self.config.gui_settings.get("close_to_tray", True))
+        self.window_width_spin.setValue(self.config.window_width)
+        self.window_height_spin.setValue(self.config.window_height)
+        self.start_minimized_check.setChecked(self.config.start_minimized)
+        self.close_to_tray_check.setChecked(self.config.close_to_tray)
         
         # Models tab - populate with installed models
         asyncio.create_task(self._refresh_models())
@@ -241,10 +241,10 @@ class SettingsDialog(QDialog):
             self.permission_combo.setCurrentIndex(index)
         
         self.require_confirmation_check.setChecked(
-            self.config.security_settings.get("require_confirmation", True)
+            self.config.require_confirmation
         )
         self.enable_audit_check.setChecked(
-            self.config.security_settings.get("enable_audit", False)
+            self.config.enable_audit_log
         )
         
         # Advanced tab
@@ -259,21 +259,24 @@ class SettingsDialog(QDialog):
             self.refresh_models_button.setEnabled(False)
             self.refresh_models_button.setText("Refreshing...")
             
-            # Get installed models
-            models = await self.model_manager.list_all_installed_models()
+            # Get installed models (returns List[ModelInfo])
+            model_infos = await self.model_manager.list_all_installed_models()
+            
+            # Extract model names from ModelInfo objects
+            model_names = [m.name for m in model_infos]
             
             # Update text model combo
-            current_text_model = self.config.text_model
+            current_text_model = self.config.default_text_model
             self.text_model_combo.clear()
-            self.text_model_combo.addItems(models)
+            self.text_model_combo.addItems(model_names)
             
             index = self.text_model_combo.findText(current_text_model)
             if index >= 0:
                 self.text_model_combo.setCurrentIndex(index)
             
             # Update vision model combo (filter for vision-capable models)
-            current_vision_model = self.config.vision_model
-            vision_models = [m for m in models if "vision" in m.lower() or "llava" in m.lower()]
+            current_vision_model = self.config.default_vision_model
+            vision_models = [name for name in model_names if "vision" in name.lower() or "llava" in name.lower()]
             self.vision_model_combo.clear()
             self.vision_model_combo.addItems(vision_models if vision_models else ["No vision models installed"])
             
@@ -281,7 +284,7 @@ class SettingsDialog(QDialog):
             if index >= 0:
                 self.vision_model_combo.setCurrentIndex(index)
             
-            logger.info(f"Refreshed model list: {len(models)} models found")
+            logger.info(f"Refreshed model list: {len(model_names)} models found")
             
         except Exception as e:
             logger.error(f"Failed to refresh models: {e}")
@@ -395,25 +398,25 @@ class SettingsDialog(QDialog):
     def _save_settings(self):
         """Save settings to config."""
         # General settings
-        self.config.gui_settings["theme"] = self.theme_combo.currentText()
-        self.config.gui_settings["window_width"] = self.window_width_spin.value()
-        self.config.gui_settings["window_height"] = self.window_height_spin.value()
-        self.config.gui_settings["start_minimized"] = self.start_minimized_check.isChecked()
-        self.config.gui_settings["close_to_tray"] = self.close_to_tray_check.isChecked()
+        self.config.theme = self.theme_combo.currentText().lower()
+        self.config.window_width = self.window_width_spin.value()
+        self.config.window_height = self.window_height_spin.value()
+        self.config.start_minimized = self.start_minimized_check.isChecked()
+        self.config.close_to_tray = self.close_to_tray_check.isChecked()
         
         # Model settings
         text_model = self.text_model_combo.currentText()
         if text_model:
-            self.config.text_model = text_model
+            self.config.default_text_model = text_model
         
         vision_model = self.vision_model_combo.currentText()
         if vision_model and vision_model != "No vision models installed":
-            self.config.vision_model = vision_model
+            self.config.default_vision_model = vision_model
         
         # Security settings
         self.config.permission_level = self.permission_combo.currentText().lower()
-        self.config.security_settings["require_confirmation"] = self.require_confirmation_check.isChecked()
-        self.config.security_settings["enable_audit"] = self.enable_audit_check.isChecked()
+        self.config.require_confirmation = self.require_confirmation_check.isChecked()
+        self.config.enable_audit_log = self.enable_audit_check.isChecked()
         
         # Advanced settings
         host = self.ollama_host_input.text().strip()
@@ -423,7 +426,8 @@ class SettingsDialog(QDialog):
         self.config.ollama_timeout = self.timeout_spin.value()
         self.config.max_chat_history = self.max_history_spin.value()
         
-        # Save to file
-        self.config_manager.save_config(self.config)
+        # Convert AppConfig to dict before saving
+        config_dict = self.config_manager.to_dict()
+        self.config_manager.save_config(config_dict)
         
         logger.info("Settings saved successfully")
