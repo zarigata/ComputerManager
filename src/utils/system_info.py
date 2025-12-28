@@ -18,6 +18,12 @@ try:
 except ImportError:
     NVML_AVAILABLE = False
 
+try:
+    import GPUtil
+    GPUTIL_AVAILABLE = True
+except ImportError:
+    GPUTIL_AVAILABLE = False
+
 
 @dataclass
 class SystemInfo:
@@ -76,27 +82,45 @@ class SystemDetector:
         }
     
     def get_gpu_info(self) -> List[Dict[str, any]]:
-        """Get NVIDIA GPU information (if available)"""
-        if not self._gpu_initialized:
-            return []
-        
+        """Get GPU information (NVIDIA via NVML or generic via GPUtil)"""
         gpus = []
-        try:
-            device_count = nvml.nvmlDeviceGetCount()
-            for i in range(device_count):
-                handle = nvml.nvmlDeviceGetHandleByIndex(i)
-                name = nvml.nvmlDeviceGetName(handle)
-                memory_info = nvml.nvmlDeviceGetMemoryInfo(handle)
-                
-                gpus.append({
-                    "index": i,
-                    "name": name.decode('utf-8') if isinstance(name, bytes) else name,
-                    "memory_total_gb": memory_info.total / (1024 ** 3),
-                    "memory_free_gb": memory_info.free / (1024 ** 3),
-                    "memory_used_gb": memory_info.used / (1024 ** 3),
-                })
-        except Exception as e:
-            print(f"Warning: Could not get GPU info: {e}")
+        
+        # Try NVML first (NVIDIA specific, more detailed)
+        if self._gpu_initialized:
+            try:
+                device_count = nvml.nvmlDeviceGetCount()
+                for i in range(device_count):
+                    handle = nvml.nvmlDeviceGetHandleByIndex(i)
+                    name = nvml.nvmlDeviceGetName(handle)
+                    memory_info = nvml.nvmlDeviceGetMemoryInfo(handle)
+                    
+                    gpus.append({
+                        "index": i,
+                        "name": name.decode('utf-8') if isinstance(name, bytes) else name,
+                        "memory_total_gb": memory_info.total / (1024 ** 3),
+                        "memory_free_gb": memory_info.free / (1024 ** 3),
+                        "memory_used_gb": memory_info.used / (1024 ** 3),
+                        "source": "nvml"
+                    })
+                return gpus
+            except Exception as e:
+                print(f"Warning: NVML detection failed: {e}")
+        
+        # Fallback to GPUtil
+        if GPUTIL_AVAILABLE:
+            try:
+                available_gpus = GPUtil.getGPUs()
+                for i, gpu in enumerate(available_gpus):
+                    gpus.append({
+                        "index": i,
+                        "name": gpu.name,
+                        "memory_total_gb": gpu.memoryTotal / 1024,  # GPUtil returns MB
+                        "memory_free_gb": gpu.memoryFree / 1024,
+                        "memory_used_gb": gpu.memoryUsed / 1024,
+                        "source": "gputil"
+                    })
+            except Exception as e:
+                print(f"Warning: GPUtil detection failed: {e}")
         
         return gpus
     

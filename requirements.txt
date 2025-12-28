@@ -4,6 +4,7 @@ ollama>=0.6.1
 # System Information & Monitoring
 psutil>=5.9.0
 py3nvml>=0.2.7  # NVIDIA GPU detection (optional, graceful fallback)
+GPUtil>=1.4.0   # General GPU detection fallback
 
 # GUI Framework
 PyQt6>=6.6.0
