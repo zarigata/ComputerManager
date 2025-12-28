@@ -21,6 +21,7 @@ from qasync import asyncSlot
 
 from ..ollama.client import OllamaClient, OllamaConnectionError
 from ..utils.config import get_config
+from ..security.permissions import PermissionManager, PermissionLevel
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,9 @@ class ChatWindow(QMainWindow):
         self.conversation_history: List[Dict[str, str]] = []
         self.current_response = ""
         self.is_streaming = False
+        
+        # Initialize security components
+        self.permission_manager = PermissionManager(self.config)
         
         self._init_ui()
         self._connect_signals()
@@ -85,12 +89,17 @@ class ChatWindow(QMainWindow):
         
         # Create status bar
         self.status_label = QLabel("Ready")
-        self.model_label = QLabel(f"Model: {self.config.text_model}")
+        self.model_label = QLabel(f"Model: {self.config.default_text_model}")
         self.streaming_indicator = QLabel("")
+        
+        # Add security status indicator
+        self.security_status_label = QLabel()
+        self._update_security_status()
         
         status_layout = QHBoxLayout()
         status_layout.addWidget(self.status_label)
         status_layout.addStretch()
+        status_layout.addWidget(self.security_status_label)
         status_layout.addWidget(self.streaming_indicator)
         status_layout.addWidget(self.model_label)
         status_layout.setContentsMargins(10, 5, 10, 5)
@@ -362,13 +371,44 @@ class ChatWindow(QMainWindow):
         if dialog.exec():
             # Reload config after settings change
             self.config = get_config()
-            self.model_label.setText(f"Model: {self.config.text_model}")
+            self.model_label.setText(f"Model: {self.config.default_text_model}")
             logger.info("Settings updated")
     
     def _show_tool_execution(self, message: str):
         """Show tool execution indicator."""
         self.status_label.setText(message)
         self.status_label.setStyleSheet("color: #ff8c00;")
+    
+    def _update_security_status(self):
+        """Update security status indicator."""
+        # Get current permission level
+        level = self.permission_manager.get_current_level()
+        is_admin = self.permission_manager.is_admin()
+        
+        # Set icon and color based on level
+        if level == PermissionLevel.BASIC:
+            icon = "🛡️"
+            color = "#107c10"  # Green
+            text = "Basic"
+        elif level == PermissionLevel.ADVANCED:
+            icon = "🛡️"
+            color = "#ff8c00"  # Orange
+            text = "Advanced"
+        else:  # ADMIN
+            icon = "🔒" if is_admin else "🛡️"
+            color = "#d13438"  # Red
+            text = "Admin"
+        
+        # Add admin indicator if running as admin
+        admin_suffix = " (Elevated)" if is_admin else ""
+        
+        self.security_status_label.setText(
+            f"<span style='color: {color}; font-weight: bold;'>{icon} {text}{admin_suffix}</span>"
+        )
+        self.security_status_label.setToolTip(
+            f"Permission Level: {text}\n"
+            f"Admin Privileges: {'Yes' if is_admin else 'No'}"
+        )
     
     def closeEvent(self, event):
         """Handle window close event."""

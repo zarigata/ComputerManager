@@ -37,6 +37,18 @@ The agent framework enables the AI to use tools for enhanced functionality:
 
 The agent can execute up to 10 tool calls in a single conversation turn, enabling complex multi-step operations.
 
+## ✨ Optional Features
+
+### 🔗 LangChain Integration
+
+Unlock the power of LangChain's massive tool ecosystem (Wikipedia, DuckDuckGo Search, Calculator, etc.) by enabling this optional integration.
+
+- **Hybrid Approach**: Combine our fast, custom agent core with LangChain's versatile tools.
+- **Easy Configuration**: Enable/disable via Settings or environment variables.
+- **Extensible**: Developers can easily add more LangChain tools.
+
+See [docs/LANGCHAIN_INTEGRATION.md](docs/LANGCHAIN_INTEGRATION.md) for full details.
+
 ## 🔧 Automation Features
 
 Computer Manager includes powerful automation capabilities through specialized tools:
@@ -142,7 +154,11 @@ venv\Scripts\activate
 source venv/bin/activate
 
 # 4. Install dependencies
+# Standard installation:
 pip install -r requirements.txt
+
+# With LangChain support (Optional):
+pip install -e .[langchain]
 
 # 5. Launch the Matrix
 python src/main.py
@@ -200,10 +216,54 @@ REQUIRE_CONFIRMATION=true
 
 ## 🛡️ Security
 
-We take this seriously.
-*   **Sandbox Mode**: Actions are isolated.
-*   **Human-in-the-loop**: High-risk commands (like deleting files) require your explicit YES.
-*   **Local Only**: Did we mention no data leaves your PC? Because it doesn't.
+Computer Manager implements a comprehensive security system to protect you from unintended or malicious actions.
+
+### Permission Levels
+
+Choose your security level based on trust and use case:
+
+| Level | Access | Use Case |
+|-------|--------|----------|
+| **Basic** | Read-only operations (files, processes, screen) | Safe exploration without system changes |
+| **Advanced** | File writes, automation, app launching | Productivity automation with controlled access |
+| **Admin** | System modifications, deletions, service control | Full system administration |
+
+### Security Features
+
+*   **🔐 Permission Enforcement**: Three-tier access control prevents unauthorized operations
+*   **✅ User Confirmations**: Interactive approval required for sensitive actions (file deletion, process termination, etc.)
+*   **📋 Audit Logging**: Complete history of all AI actions with timestamps and parameters
+*   **🔑 Privilege Elevation**: Platform-specific UAC/sudo integration for admin operations
+*   **🛡️ Parameter Sanitization**: Passwords and tokens are automatically redacted from logs
+*   **⏱️ Decision Caching**: Remember confirmation choices for repeated operations
+
+### Configuration
+
+```env
+# Security Configuration
+PERMISSION_LEVEL=advanced          # basic, advanced, or admin
+REQUIRE_CONFIRMATION=true          # Require approval for sensitive actions
+ENABLE_AUDIT_LOG=true             # Log all AI actions
+AUDIT_LOG_PATH=logs/audit.log     # Where to store audit logs
+```
+
+### Audit Log Viewer
+
+Access the audit log viewer from Settings → Security tab to:
+- View all AI actions with timestamps
+- Filter by tool name, date range, or status
+- Export logs to JSON or CSV
+- Clear logs with automatic backup
+
+### Platform-Specific Privilege Elevation
+
+- **Windows**: UAC prompt for administrator access
+- **Linux**: sudo authentication for root operations
+- **macOS**: Native authentication dialog via osascript
+
+For detailed security architecture and troubleshooting, see [docs/SECURITY.md](docs/SECURITY.md).
+
+**Privacy Guarantee**: All security checks happen locally. No data leaves your machine.
 
 ## 🤝 Contributing
 

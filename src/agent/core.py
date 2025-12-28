@@ -9,6 +9,10 @@ from ..utils.config import get_config
 
 from ..ollama.client import OllamaClient
 from .tool_registry import ToolRegistry
+from ..security.permissions import PermissionManager
+from ..security.audit_log import AuditLogger
+from ..security.confirmation_dialog import ConfirmationManager
+from ..security.middleware import SecurityMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +27,8 @@ class Agent:
         model: str = "llama3.2:3b",
         max_iterations: int = 10,
         system_prompt: Optional[str] = None,
-        tool_execution_timeout: Optional[int] = None
+        tool_execution_timeout: Optional[int] = None,
+        parent_widget = None
     ):
         """Initialize the agent.
         
@@ -34,12 +39,24 @@ class Agent:
             max_iterations: Maximum tool execution loops
             system_prompt: Custom system prompt for tool usage
             tool_execution_timeout: Timeout in seconds for tool execution (default from config)
+            parent_widget: Parent widget for confirmation dialogs
         """
         self.ollama_client = ollama_client
         self.tool_registry = tool_registry
         self.model = model
         self.max_iterations = max_iterations
         self.conversation_history: List[Dict[str, Any]] = []
+        
+        # Initialize security components
+        config = get_config()
+        self.permission_manager = PermissionManager(config)
+        self.audit_logger = AuditLogger(config)
+        self.confirmation_manager = ConfirmationManager(config, parent_widget)
+        self.security_middleware = SecurityMiddleware(
+            self.permission_manager,
+            self.audit_logger,
+            self.confirmation_manager
+        )
         
         # Set tool execution timeout from parameter or config
         if tool_execution_timeout is None:
@@ -156,14 +173,19 @@ class Agent:
             logger.error(error_msg)
             result = self._format_tool_error(call_id, tool_name, error_msg)
         else:
-            # Execute tool with timeout
+            # Execute tool with security middleware and timeout
             try:
                 tool_result = await asyncio.wait_for(
-                    tool.execute(**arguments),
+                    self.security_middleware.execute_with_security(tool, **arguments),
                     timeout=self.tool_execution_timeout
                 )
                 result = self._format_tool_result(call_id, tool_name, tool_result)
                 logger.info(f"Tool {tool_name} executed successfully")
+            except PermissionError as e:
+                # Permission denied by security middleware
+                error_msg = str(e)
+                logger.error(f"Tool {tool_name} permission denied: {error_msg}")
+                result = self._format_tool_error(call_id, tool_name, error_msg)
             except asyncio.TimeoutError:
                 error_msg = f"Tool execution timed out after {self.tool_execution_timeout}s"
                 logger.error(f"Tool {tool_name} {error_msg}")

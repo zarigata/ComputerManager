@@ -30,3 +30,10 @@ PyXA>=0.1.0; sys_platform == 'darwin'  # macOS automation
 pytest>=7.4.0
 black>=23.0.0
 ruff>=0.1.0
+
+# LangChain Integration (Optional)
+# Install with: pip install -e .[langchain]
+langchain>=0.1.0
+langchain-community>=0.0.20
+wikipedia>=1.4.0
+duckduckgo-search>=4.0.0

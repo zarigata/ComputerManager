@@ -18,8 +18,8 @@ from src.utils.system_info import SystemDetector
 from src.ollama.client import OllamaClient, OllamaConnectionError
 from src.ollama.model_manager import ModelManager
 from src.gui import ChatWindow, SystemTrayManager, apply_theme, detect_system_theme
-from src.agent import Agent, get_tool_registry, initialize_builtin_tools
-from src.automation import register_file_tools, register_app_control_tools, register_screen_tools, register_keyboard_mouse_tools
+from src.agent import Agent, get_tool_registry, initialize_builtin_tools, initialize_langchain_tools
+from src.automation import register_file_tools, register_app_control_tools, register_screen_tools, register_keyboard_mouse_tools, register_platform_tools
 from src.ollama.vision import register_vision_tools
 
 # Configure basic logging (file handler will be added after config init)
@@ -182,6 +182,15 @@ def main():
                 register_screen_tools()
                 register_keyboard_mouse_tools()
                 register_vision_tools()
+                register_platform_tools()
+
+                
+                # Initialize LangChain tools (optional)
+                try:
+                    initialize_langchain_tools(config)
+                except Exception as e:
+                    logger.error(f"Error initializing LangChain tools: {e}")
+                
                 registry = get_tool_registry()
                 logger.info(f"Registered {len(registry)} tools")
                 
@@ -190,9 +199,15 @@ def main():
                     tool_registry=registry,
                     model=config.default_text_model,
                     max_iterations=config.agent_max_iterations,
-                    system_prompt=config.agent_system_prompt
+                    system_prompt=config.agent_system_prompt,
+                    parent_widget=None  # Will be set to chat_window later
                 )
                 logger.info("Agent initialized successfully")
+                
+                # Log security configuration
+                logger.info(f"Security: Permission level = {config.permission_level}")
+                logger.info(f"Security: Audit logging = {'enabled' if config.enable_audit_log else 'disabled'}")
+                logger.info(f"Security: Confirmation required = {config.require_confirmation}")
             else:
                 logger.info("Agent framework disabled")
             

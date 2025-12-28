@@ -67,6 +67,10 @@ class AppConfig:
     agent_system_prompt: Optional[str] = None
     tool_execution_timeout: int = 30
     
+    # LangChain Integration
+    langchain_enabled: bool = False
+    langchain_tools: list[str] = field(default_factory=lambda: ["wikipedia", "calculator", "duckduckgo_search"])
+    
     # Paths
     config_dir: Path = field(default_factory=lambda: Path.home() / ".computer-manager")
     cache_dir: Path = field(default_factory=lambda: Path.home() / ".computer-manager" / "cache")
@@ -142,6 +146,12 @@ class ConfigManager:
         self.config.agent_system_prompt = os.getenv("AGENT_SYSTEM_PROMPT")
         self.config.tool_execution_timeout = int(os.getenv("TOOL_EXECUTION_TIMEOUT", self.config.tool_execution_timeout))
         
+        # LangChain Configuration
+        self.config.langchain_enabled = os.getenv("LANGCHAIN_ENABLED", "false").lower() == "true"
+        langchain_tools_str = os.getenv("LANGCHAIN_TOOLS")
+        if langchain_tools_str:
+            self.config.langchain_tools = [t.strip() for t in langchain_tools_str.split(",") if t.strip()]
+        
         # Paths - allow overriding via env
         if os.getenv("MODEL_CACHE_DIR"):
             self.config.model_cache_dir = Path(os.getenv("MODEL_CACHE_DIR"))
@@ -151,6 +161,9 @@ class ConfigManager:
         self.config.cache_dir.mkdir(parents=True, exist_ok=True)
         self.config.log_dir.mkdir(parents=True, exist_ok=True)
         self.config.model_cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Validate security configuration
+        self.validate_security_config()
 
     def validate_quantization_format(self, quantization: str) -> bool:
         """
@@ -185,6 +198,74 @@ class ConfigManager:
             "auto_download_models": True,
             "automation_delay_ms": 100,
         }
+    
+    def validate_security_config(self):
+        """
+        Validate security configuration settings.
+        
+        Checks permission level, audit log path, and creates necessary directories.
+        Logs warnings for misconfigurations.
+        """
+        # Validate permission level
+        valid_levels = ["basic", "advanced", "admin"]
+        if self.config.permission_level.lower() not in valid_levels:
+            logger.warning(
+                f"Invalid permission level '{self.config.permission_level}'. "
+                f"Valid values are: {', '.join(valid_levels)}. Defaulting to 'advanced'."
+            )
+            self.config.permission_level = "advanced"
+        
+        # Validate audit log path
+        if self.config.enable_audit_log:
+            audit_log_path = Path(self.config.audit_log_path)
+            
+            # Create audit log directory if it doesn't exist
+            try:
+                audit_log_path.parent.mkdir(parents=True, exist_ok=True)
+                
+                # Test if path is writable
+                test_file = audit_log_path.parent / ".write_test"
+                try:
+                    test_file.touch()
+                    test_file.unlink()
+                except Exception as e:
+                    logger.error(
+                        f"Audit log path '{audit_log_path}' is not writable: {e}. "
+                        "Audit logging may fail."
+                    )
+            except Exception as e:
+                logger.error(
+                    f"Failed to create audit log directory '{audit_log_path.parent}': {e}"
+                )
+        
+        # Warn if admin permission level is set without proper privileges
+        if self.config.permission_level.lower() == "admin":
+            # Import here to avoid circular dependency
+            try:
+                from ..security.permissions import PermissionManager
+                pm = PermissionManager(self.config)
+                if not pm.is_admin():
+                    logger.warning(
+                        "Permission level is set to 'admin' but the application is not "
+                        "running with administrator/root privileges. Some operations may fail."
+                    )
+            except ImportError:
+                pass  # Security module not available yet
+        
+        # Validate boolean flags
+        if not isinstance(self.config.require_confirmation, bool):
+            logger.warning(
+                f"Invalid require_confirmation value: {self.config.require_confirmation}. "
+                "Defaulting to True."
+            )
+            self.config.require_confirmation = True
+        
+        if not isinstance(self.config.enable_audit_log, bool):
+            logger.warning(
+                f"Invalid enable_audit_log value: {self.config.enable_audit_log}. "
+                "Defaulting to True."
+            )
+            self.config.enable_audit_log = True
 
     def save_config(self, config_dict: Dict[str, Any]):
         """
