@@ -1,0 +1,29 @@
+# Core AI Integration
+ollama>=0.6.1
+
+# System Information & Monitoring
+psutil>=5.9.0
+py3nvml>=0.2.7  # NVIDIA GPU detection (optional, graceful fallback)
+
+# GUI Framework
+PyQt6>=6.6.0
+PyQt6-Qt6>=6.6.0
+
+# Image Processing
+Pillow>=10.0.0
+
+# Configuration Management
+python-dotenv>=1.0.0
+
+# Automation (for future phases)
+PyAutoGUI>=0.9.54
+pyperclip>=1.8.2
+
+# Platform-specific (optional, installed conditionally)
+pyuac>=0.0.3; sys_platform == 'win32'  # Windows UAC elevation
+PyXA>=0.1.0; sys_platform == 'darwin'  # macOS automation
+
+# Development Dependencies (optional)
+pytest>=7.4.0
+black>=23.0.0
+ruff>=0.1.0
