@@ -6,11 +6,16 @@ and .env files with python-dotenv.
 """
 
 import os
+import re
+import httpx
+import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 from dataclasses import dataclass, field
 
+# Configure logger
+logger = logging.getLogger(__name__)
 
 @dataclass
 class AppConfig:
@@ -24,6 +29,8 @@ class AppConfig:
     default_text_model: Optional[str] = None  # Auto-detect if None
     default_vision_model: Optional[str] = None  # Auto-detect if None
     model_quantization: str = "Q4_K_M"
+    auto_download_models: bool = False
+    preferred_model_size: str = "auto"
     
     # GUI Configuration
     window_width: int = 800
@@ -50,6 +57,7 @@ class AppConfig:
     config_dir: Path = field(default_factory=lambda: Path.home() / ".computer-manager")
     cache_dir: Path = field(default_factory=lambda: Path.home() / ".computer-manager" / "cache")
     log_dir: Path = field(default_factory=lambda: Path.home() / ".computer-manager" / "logs")
+    model_cache_dir: Path = field(default_factory=lambda: Path.home() / ".computer-manager" / "models")
 
 
 class ConfigManager:
@@ -78,7 +86,16 @@ class ConfigManager:
         
         self.config.default_text_model = os.getenv("DEFAULT_TEXT_MODEL")
         self.config.default_vision_model = os.getenv("DEFAULT_VISION_MODEL")
-        self.config.model_quantization = os.getenv("MODEL_QUANTIZATION", self.config.model_quantization)
+        
+        # Validate and set quantization
+        quant_env = os.getenv("MODEL_QUANTIZATION", self.config.model_quantization)
+        if self.validate_quantization_format(quant_env):
+            self.config.model_quantization = quant_env
+        else:
+            logger.warning(f"Invalid quantization format: {quant_env}. Using default: {self.config.model_quantization}")
+
+        self.config.auto_download_models = os.getenv("AUTO_DOWNLOAD_MODELS", "false").lower() == "true"
+        self.config.preferred_model_size = os.getenv("PREFERRED_MODEL_SIZE", self.config.preferred_model_size)
         
         self.config.window_width = int(os.getenv("WINDOW_WIDTH", self.config.window_width))
         self.config.window_height = int(os.getenv("WINDOW_HEIGHT", self.config.window_height))
@@ -97,11 +114,50 @@ class ConfigManager:
         self.config.log_level = os.getenv("LOG_LEVEL", self.config.log_level)
         self.config.max_chat_history = int(os.getenv("MAX_CHAT_HISTORY", self.config.max_chat_history))
         
+        # Paths - allow overriding via env
+        if os.getenv("MODEL_CACHE_DIR"):
+            self.config.model_cache_dir = Path(os.getenv("MODEL_CACHE_DIR"))
+
         # Create directories if they don't exist
         self.config.config_dir.mkdir(parents=True, exist_ok=True)
         self.config.cache_dir.mkdir(parents=True, exist_ok=True)
         self.config.log_dir.mkdir(parents=True, exist_ok=True)
-    
+        self.config.model_cache_dir.mkdir(parents=True, exist_ok=True)
+
+    def validate_quantization_format(self, quantization: str) -> bool:
+        """
+        Validate quantization string format (e.g., Q4_K_M, Q8_0, etc.)
+        Allows typical GGML/GGUF quantization patterns.
+        """
+        # Common patterns: Q4_K_M, Q4_0, Q5_K_S, F16, etc.
+        # A simple regex to catch most valid formats
+        pattern = r"^(Q[2-8]_[0-9A-Z]_[A-Z0-9]+|Q[2-8]_[0-9]|F16|F32|BF16)$"
+        return bool(re.match(pattern, quantization))
+
+    async def validate_ollama_config(self) -> bool:
+        """Check if OLLAMA_HOST is reachable"""
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(self.config.ollama_host)
+                # Ollama typically returns "Ollama is running" on root
+                return response.status_code == 200
+        except Exception as e:
+            logger.error(f"Ollama config validation failed: {e}")
+            return False
+
+    def get_recommended_config(self) -> Dict[str, Any]:
+        """
+        Suggest optimal settings based on checking system resources
+        (This is a placeholder that could use SystemDetector logic if imported,
+         but usually config is low-level, so we keep it simple or inject dependency)
+        """
+        # Return generic recommendations for now
+        return {
+            "model_quantization": "Q4_K_M",
+            "auto_download_models": True,
+            "automation_delay_ms": 100,
+        }
+
     def save_config(self, config_dict: Dict[str, Any]):
         """
         Save configuration to .env file

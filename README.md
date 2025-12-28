@@ -1,208 +1,113 @@
-# Computer Manager - AI-Powered Desktop Automation
+![Computer Manager Banner](assets/banner.png)
 
-An intelligent desktop assistant powered by Ollama that can control and automate your computer through natural language commands. Works on Windows, Linux, and macOS.
+# Computer Manager - Your Private AI Desktop Assistant
 
-## Features
+**Automate your digital life without sacrificing your privacy.**
 
-- 🤖 **AI-Powered Control**: Use natural language to control your computer
-- 👁️ **Vision Capabilities**: AI can see and understand your screen
-- 🖥️ **Cross-Platform**: Works on Windows, Linux, and macOS
-- 🎯 **Smart Model Selection**: Automatically selects optimal AI models based on your hardware
-- 🔒 **Secure**: Built-in permission system and audit logging
-- 📦 **Easy Installation**: Single executable download, no Python required
+Computer Manager is a powerful, locally-installed AI agent designed to handle the boring, repetitive, and annoying tasks on your computer. Powered by local Large Language Models (LLMs) via Ollama, it sees what you see and does what you tell it to—all while ensuring **zero data leaves your machine**.
 
-## Hardware Requirements
+We believe in **Data Sovereignty**. We are not evil bureaucrats. We don't collect your data. We don't sell your habits. This tool is Open Source, free to use, and transparent to the core.
 
-### Minimum (Low-End)
-- **RAM**: 4-8 GB
-- **Recommended Model**: Phi-3 Mini (3B) or Gemma 3:4B
-- **Vision Model**: Llama 3.2 Vision 11B
+## 🚀 Key Features
 
-### Recommended (Mid-Range)
-- **RAM**: 8-16 GB
-- **Recommended Model**: Mistral 7B or Llama 3.2 7B
-- **Vision Model**: Qwen 2.5 VL 7B
+*   **🔒 Privacy First & "Null Data" Policy**: No telemetry, no cloud processing, no spying. Your data stays on your SSD.
+*   **🤖 Local AI Intelligence**: Leverages the power of Ollama (Llama 3, Mistral, Gemma) to understand natural language commands.
+*   **👁️ Visual Understanding**: Capable of "seeing" your screen to provide context-aware assistance (requires Vision models).
+*   **⚡ Completely Autonomous**: Can organize files, manage system settings, and automate workflows.
+*   **🐧 Cross-Platform**: Run it on Windows, Linux, or macOS.
 
-### High-End
-- **RAM**: 16+ GB
-- **Recommended Model**: Llama 3.2 70B
-- **Vision Model**: Qwen 2.5 VL 72B
+## ✊ Why Computer Manager?
 
-## Prerequisites
+In an era where every "AI" tool demands your personal data as payment, Computer Manager stands apart.
+*   **For the Paranoid**: We built this because we don't trust big tech either.
+*   **For the Power User**: Automate complex file operations with a single sentence.
+*   **For the Lazy**: "Clean up my Downloads folder" should be a voice command, not a 20-minute chore.
 
-1. **Ollama**: Install Ollama on your system
-   - Windows/Mac: Download from [ollama.com](https://ollama.com)
-   - Linux: `curl -fsSL https://ollama.com/install.sh | sh`
+## 🛠️ Hardware Requirements
 
-2. **Python 3.9+** (for development only, not required for pre-built executables)
+Since this runs **locally**, your hardware dictates performance.
 
-## Installation
+| Level | RAM | Recommended Model | Use Case |
+| :--- | :--- | :--- | :--- |
+| **Minimum** | 8GB | Phi-3 / Gemma 2B | Basic text commands |
+| **Recommended** | 16GB | Llama 3 7B / Mistral | Standard automation |
+| **Powerhouse** | 32GB+ | Llama 3 70B / Qwen VL | Complex reasoning & Vision |
 
-### Option 1: Download Pre-built Executable (Recommended)
+## 📦 Prerequisites
 
-1. Go to [Releases](https://github.com/yourusername/computer-manager/releases)
-2. Download the executable for your platform:
-   - Windows: `ComputerManager-Windows.exe`
-   - Linux: `ComputerManager-Linux.AppImage`
-   - macOS: `ComputerManager-macOS.app`
-3. Run the executable
+1.  **Ollama**: The heart of the operation.
+    *   Windows/Mac: [Download from ollama.com](https://ollama.com)
+    *   Linux: `curl -fsSL https://ollama.com/install.sh | sh`
+2.  **Modern OS**: Windows 10/11, macOS 12+, or a modern Linux distro.
 
-### Option 2: Install from Source
+## 💾 Installation
+
+### Option 1: The "I just want it to work" (Binaries)
+*(Coming Soon - Check [Releases](https://github.com/yourusername/computer-manager/releases) for pre-built executables)*
+
+### Option 2: The "Hacker Way" (Source)
 
 ```bash
-# Clone the repository
+# 1. Clone the repo (you know the drill)
 git clone https://github.com/yourusername/computer-manager.git
 cd computer-manager
 
-# Create virtual environment
+# 2. Set up your environment
 python -m venv venv
 
-# Activate virtual environment
+# 3. Activate
 # Windows:
 venv\Scripts\activate
-# Linux/macOS:
+# Linux/Mac:
 source venv/bin/activate
 
-# Install dependencies
+# 4. Install dependencies
 pip install -r requirements.txt
 
-# Run the application
+# 5. Launch the Matrix
 python src/main.py
 ```
 
-## Configuration
+## ⚙️ Configuration
 
-Create a `.env` file in the project root (copy from `.env.example`):
+Copy `.env.example` to `.env` and tweak to your liking.
 
 ```env
-# Ollama Configuration
+# Point this to your local Ollama instance
 OLLAMA_HOST=http://localhost:11434
 
-# Model Configuration (leave empty for auto-detection)
-DEFAULT_TEXT_MODEL=
-DEFAULT_VISION_MODEL=
+# Choose your weapon (Model)
+DEFAULT_TEXT_MODEL=llama3
+DEFAULT_VISION_MODEL=llava
 
-# Security Configuration
+# Safety First
 REQUIRE_CONFIRMATION=true
-PERMISSION_LEVEL=advanced
 ```
 
-## Usage
+## 🎮 Usage
 
-1. **Start Ollama**: Make sure Ollama is running on your system
-2. **Launch Computer Manager**: Run the executable or `python src/main.py`
-3. **First Run**: The app will detect your hardware and recommend optimal models
-4. **Chat**: Type commands in natural language:
-   - "Take a screenshot and describe what you see"
-   - "Open my browser and search for Python tutorials"
-   - "Create a new folder called 'Projects' on my desktop"
-   - "Find all PDF files in my Documents folder"
+1.  Ensure **Ollama** is running (`ollama serve`).
+2.  Run **Computer Manager**.
+3.  Type naturally:
+    *   *"Sort my Downloads folder by date"*
+    *   *"Find all duplicate images in Pictures"*
+    *   *"Close all Chrome tabs that are playing audio"* (Coming soon)
+    *   *"Take a look at this error message and tell me how to fix it"*
 
-## Capabilities
+## 🛡️ Security
 
-### Current Features
-- ✅ System information detection
-- ✅ Configuration management
-- ✅ Ollama integration
+We take this seriously.
+*   **Sandbox Mode**: Actions are isolated.
+*   **Human-in-the-loop**: High-risk commands (like deleting files) require your explicit YES.
+*   **Local Only**: Did we mention no data leaves your PC? Because it doesn't.
 
-### Upcoming Features (In Development)
-- 🔄 Chat interface with PyQt6
-- 🔄 File operations (read, write, move, delete)
-- 🔄 Application launching and control
-- 🔄 Screenshot capture and analysis
-- 🔄 Keyboard and mouse automation
-- 🔄 Platform-specific system control
-- 🔄 Security and audit logging
+## 🤝 Contributing
 
-## Security
+We welcome fellow code-wizards. Check out [CONTRIBUTING.md](CONTRIBUTING.md) to join the resistance.
 
-Computer Manager includes multiple security layers:
+## 📄 License
 
-- **Permission Levels**: Basic, Advanced, Admin
-- **User Confirmation**: Prompts for sensitive operations
-- **Audit Logging**: Tracks all AI-initiated actions
-- **Sandboxing**: Configurable operation restrictions
-
-## Development
-
-### Project Structure
-
-```
-ComputerManager/
-├── src/
-│   ├── gui/              # PyQt6 interface
-│   ├── ollama/           # Ollama integration
-│   ├── agent/            # AI agent core
-│   ├── automation/       # System automation
-│   ├── security/         # Security layer
-│   └── utils/            # Utilities (system_info, config)
-├── tests/                # Unit tests
-├── docs/                 # Documentation
-└── build/                # Build scripts
-```
-
-### Running Tests
-
-```bash
-pytest tests/
-```
-
-### Code Formatting
-
-```bash
-black src/
-ruff check src/
-```
-
-## Troubleshooting
-
-### Ollama Connection Error
-- Ensure Ollama is running: `ollama serve`
-- Check Ollama host in `.env`: `OLLAMA_HOST=http://localhost:11434`
-
-### GPU Not Detected
-- Install NVIDIA drivers if you have an NVIDIA GPU
-- The app will automatically fall back to CPU mode
-
-### Permission Errors
-- Windows: Run as Administrator for system-level operations
-- Linux/macOS: Use `sudo` for privileged operations
-
-## Contributing
-
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## License
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [Ollama](https://ollama.com) - Local AI model runtime
-- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) - GUI framework
-- [psutil](https://github.com/giampaolo/psutil) - System monitoring
-- [py3nvml](https://github.com/fbcotter/py3nvml) - NVIDIA GPU monitoring
-
-## Roadmap
-
-- [x] Phase 1: Project setup and system detection
-- [ ] Phase 2: Ollama integration and model management
-- [ ] Phase 3: PyQt6 chat interface
-- [ ] Phase 4: Custom agent core
-- [ ] Phase 5: Basic automation tools
-- [ ] Phase 6: Advanced automation (keyboard/mouse)
-- [ ] Phase 7: Vision integration
-- [ ] Phase 8: Platform-specific control
-- [ ] Phase 9: Security layer
-- [ ] Phase 10: LangChain integration
-- [ ] Phase 11: Cross-platform packaging
-
-## Support
-
-- 📧 Email: support@example.com
-- 💬 Discord: [Join our community](https://discord.gg/example)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/computer-manager/issues)
+MIT License. Free forever.
 
 ---
-
-**⚠️ Warning**: This application can perform system-level operations. Always review actions before confirming, especially with Admin permission level.
+*Generated with ❤️ and 0% spyware.*
