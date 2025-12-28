@@ -134,8 +134,30 @@ Since this runs **locally**, your hardware dictates performance.
 
 ## 💾 Installation
 
-### Option 1: The "I just want it to work" (Binaries)
-*(Coming Soon - Check [Releases](https://github.com/yourusername/computer-manager/releases) for pre-built executables)*
+### Option 1: Download Pre-built Binaries (Recommended)
+
+Download the latest release for your platform from the [Releases](https://github.com/yourusername/computer-manager/releases) page.
+
+#### Windows
+1. Download `ComputerManager-Windows-x64.exe`
+2. Double-click to run (Windows Defender may show a warning - click "More info" → "Run anyway")
+3. The application will start automatically
+
+#### Linux
+1. Download `ComputerManager-Linux-x64`
+2. Make it executable: `chmod +x ComputerManager-Linux-x64`
+3. Run: `./ComputerManager-Linux-x64`
+4. **Dependencies**: Install system dependencies first:
+   ```bash
+   sudo apt-get update
+   sudo apt-get install python3-tk python3-dev libxcb-xinerama0
+   ```
+
+#### macOS
+1. Download `ComputerManager-macOS-x64.dmg`
+2. Open the DMG and drag Computer Manager to Applications
+3. Right-click the app and select "Open" (first time only, due to Gatekeeper)
+4. Grant accessibility permissions when prompted (System Preferences → Security & Privacy → Privacy → Accessibility)
 
 ### Option 2: The "Hacker Way" (Source)
 
@@ -182,6 +204,29 @@ ollama pull llama3.2-vision:11b-instruct-q4_K_M
 *   **Ollama Connection Failed**: Ensure Ollama is running (`ollama serve`) and reachable at `http://localhost:11434`.
 *   **Model Not Found**: Check if `model_quantization` in `.env` matches what is on Ollama registry. Default is `Q4_K_M`.
 *   **Download Stuck**: Large models (70B+) can take hours. Use manual `ollama pull` in terminal to see progress bar.
+
+### Binary-Specific Issues
+
+#### Windows
+- **"Windows protected your PC" warning**: Click "More info" → "Run anyway". This is normal for unsigned executables.
+- **Antivirus false positive**: Add exception for ComputerManager.exe in your antivirus software.
+- **Missing DLL errors**: Install [Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+
+#### Linux
+- **"error while loading shared libraries"**: Install missing system libraries:
+  ```bash
+  sudo apt-get install libxcb-xinerama0 libxcb-cursor0 libxkbcommon-x11-0
+  ```
+- **Permission denied**: Ensure executable flag is set: `chmod +x ComputerManager-Linux-x64`
+- **AppImage not running**: Install FUSE: `sudo apt-get install fuse libfuse2`
+
+#### macOS
+- **"App is damaged and can't be opened"**: Remove quarantine attribute:
+  ```bash
+  xattr -cr /Applications/ComputerManager.app
+  ```
+- **Accessibility permissions**: Go to System Preferences → Security & Privacy → Privacy → Accessibility, and add Computer Manager
+- **"App is from an unidentified developer"**: Right-click → Open (first time only)
 
 ## ⚙️ Configuration
 

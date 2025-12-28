@@ -1,0 +1,83 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            spec: build_windows.spec
+            artifact_name: ComputerManager-Windows-x64.exe
+          - os: ubuntu-latest
+            spec: build_linux.spec
+            artifact_name: ComputerManager-Linux-x64
+          - os: macos-latest
+            spec: build_macos.spec
+            artifact_name: ComputerManager-macOS-x64.dmg
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Install Linux system dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk python3-dev libxcb-xinerama0
+
+      - name: Build with PyInstaller
+        working-directory: build
+        run: |
+          pyinstaller ${{ matrix.spec }} --clean --noconfirm
+
+      - name: Prepare Artifact (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          mv build/dist/ComputerManager.exe build/dist/${{ matrix.artifact_name }}
+
+      - name: Prepare Artifact (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mv build/dist/ComputerManager build/dist/${{ matrix.artifact_name }}
+
+      - name: Create DMG (macOS)
+        if: matrix.os == 'macos-latest'
+        uses: L1ghtn1ng/create-dmg-action@v1
+        with:
+          dmg_name: ComputerManager
+          app_file: build/dist/ComputerManager.app
+
+      - name: Rename DMG (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          mv ComputerManager.dmg build/dist/${{ matrix.artifact_name }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: build/dist/${{ matrix.artifact_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

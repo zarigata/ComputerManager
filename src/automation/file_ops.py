@@ -13,8 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
 
-from src.agent.base import BaseTool
-from src.agent.registry import get_tool_registry
+from src.agent.tool_registry import BaseTool, get_tool_registry
 
 logger = logging.getLogger(__name__)
 

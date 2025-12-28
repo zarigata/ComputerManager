@@ -12,8 +12,10 @@ from typing import Any, Dict, List, Union
 
 import pyautogui
 
-from src.agent.tool_registry import BaseTool, ToolRegistry
-from src.utils.config import config
+from src.agent.tool_registry import BaseTool, ToolRegistry, get_tool_registry
+from src.utils.config import get_config
+
+config = get_config()
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +59,7 @@ class MoveMouseTool(BaseTool):
         return "Move the mouse cursor to absolute or relative coordinates"
     
     @property
-    def parameters_json_schema(self) -> Dict[str, Any]:
+    def parameters(self) -> Dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -153,7 +155,7 @@ class ClickMouseTool(BaseTool):
         return "Perform mouse clicks at current position or specified coordinates"
     
     @property
-    def parameters_json_schema(self) -> Dict[str, Any]:
+    def parameters(self) -> Dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -274,7 +276,7 @@ class ScrollMouseTool(BaseTool):
         return "Scroll the mouse wheel up (positive) or down (negative)"
     
     @property
-    def parameters_json_schema(self) -> Dict[str, Any]:
+    def parameters(self) -> Dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -362,7 +364,7 @@ class TypeTextTool(BaseTool):
         return "Type text using keyboard input"
     
     @property
-    def parameters_json_schema(self) -> Dict[str, Any]:
+    def parameters(self) -> Dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -447,7 +449,7 @@ class PressKeyTool(BaseTool):
         return "Press keyboard keys including special keys (enter, tab, esc, arrows, function keys, etc.)"
     
     @property
-    def parameters_json_schema(self) -> Dict[str, Any]:
+    def parameters(self) -> Dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -552,7 +554,7 @@ class HotkeyTool(BaseTool):
         return "Execute keyboard shortcuts by pressing multiple keys simultaneously (e.g., Ctrl+C, Alt+Tab)"
     
     @property
-    def parameters_json_schema(self) -> Dict[str, Any]:
+    def parameters(self) -> Dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -646,7 +648,7 @@ class DragMouseTool(BaseTool):
         return "Drag the mouse from current position or specified start to end coordinates"
     
     @property
-    def parameters_json_schema(self) -> Dict[str, Any]:
+    def parameters(self) -> Dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -752,7 +754,7 @@ class DragMouseTool(BaseTool):
 
 def register_keyboard_mouse_tools() -> None:
     """Register all keyboard and mouse control tools with the global registry."""
-    registry = ToolRegistry.get_instance()
+    registry = get_tool_registry()
     
     tools = [
         MoveMouseTool(),

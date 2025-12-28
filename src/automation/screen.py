@@ -15,8 +15,10 @@ from typing import Any, Dict, Optional, Tuple
 import pyautogui
 from PIL import ImageGrab
 
-from src.agent.tool_registry import BaseTool, ToolRegistry
-from src.utils.config import config
+from src.agent.tool_registry import BaseTool, ToolRegistry, get_tool_registry
+from src.utils.config import get_config
+
+config = get_config()
 
 logger = logging.getLogger(__name__)
 
@@ -425,7 +427,7 @@ class GetPixelColorTool(BaseTool):
 
 def register_screen_tools() -> None:
     """Register all screen capture tools with the global registry."""
-    registry = ToolRegistry.get_instance()
+    registry = get_tool_registry()
     
     tools = [
         CaptureScreenshotTool(),
