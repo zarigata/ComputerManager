@@ -29,9 +29,9 @@ Since this runs **locally**, your hardware dictates performance.
 
 | Level | RAM | Recommended Model | Use Case |
 | :--- | :--- | :--- | :--- |
-| **Minimum** | 8GB | Phi-3 / Gemma 2B | Basic text commands |
-| **Recommended** | 16GB | Llama 3 7B / Mistral | Standard automation |
-| **Powerhouse** | 32GB+ | Llama 3 70B / Qwen VL | Complex reasoning & Vision |
+| **Minimum** (<8GB) | <8GB | Phi-3 3B / Llama 3.2 3B | Basic text commands, no vision |
+| **Recommended** | 8-16GB | Mistral 7B / Qwen2.5-VL 7B | Standard automation with vision |
+| **Powerhouse** | 16GB+ | Llama 3.1 70B / Qwen2.5-VL 72B | Complex reasoning & High-res Vision |
 
 ## 📦 Prerequisites
 
@@ -67,6 +67,25 @@ pip install -r requirements.txt
 # 5. Launch the Matrix
 python src/main.py
 ```
+
+### Manual Model Installation
+If auto-download fails, you can install recommendations manually:
+
+```bash
+# Medium Tier (8-16GB RAM)
+ollama pull mistral:7b-instruct-q4_K_M
+ollama pull qwen2.5-vl:7b-instruct-q4_K_M
+
+# Low Tier (<8GB RAM)
+ollama pull phi3:3b-mini-instruct-q4_K_M
+ollama pull llama3.2-vision:11b-instruct-q4_K_M
+```
+
+## ❓ Troubleshooting
+
+*   **Ollama Connection Failed**: Ensure Ollama is running (`ollama serve`) and reachable at `http://localhost:11434`.
+*   **Model Not Found**: Check if `model_quantization` in `.env` matches what is on Ollama registry. Default is `Q4_K_M`.
+*   **Download Stuck**: Large models (70B+) can take hours. Use manual `ollama pull` in terminal to see progress bar.
 
 ## ⚙️ Configuration
 

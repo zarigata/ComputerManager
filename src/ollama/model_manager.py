@@ -316,11 +316,11 @@ class ModelManager:
                 success = await self.download_model(model_name, progress_callback)
                 if success:
                     # Validate
-                     is_working = await self.verify_model_functional(model_name)
-                     if is_working:
-                         logger.info(f"Model {model_name} verified functional.")
-                     else:
-                         logger.error(f"Model {model_name} downloaded but failed verification.")
+                    is_working = await self.verify_model_functional(model_name)
+                    if is_working:
+                        logger.info(f"Model {model_name} verified functional.")
+                    else:
+                        logger.error(f"Model {model_name} downloaded but failed verification.")
 
     async def auto_select_best_available_model(self) -> Dict[str, str]:
         """

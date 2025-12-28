@@ -165,14 +165,19 @@ class SystemDetector:
         """
         system_info = self.get_full_system_info()
         ram_gb = system_info.total_ram_gb
+        vram_gb = system_info.gpu_memory_total_gb or 0
         
-        # Tier determination based on available RAM
-        if ram_gb < 8:
-            return "low"
-        elif ram_gb < 16:
-            return "medium"
-        else:
+        # High Tier: Capable of running large models (e.g. 70B ~40GB req, or 8B unquantized + context)
+        # Criteria: Big RAM, Big VRAM, or Decent RAM + Decent VRAM
+        if (ram_gb >= 32) or (vram_gb >= 16) or (ram_gb >= 16 and vram_gb >= 8):
             return "high"
+            
+        # Medium Tier: Capable of running 7B-8B models comfortably
+        if (ram_gb >= 8) or (vram_gb >= 6):
+            return "medium"
+            
+        # Low Tier: Small models only (phi-3, gemma-2b, etc)
+        return "low"
     
     def print_system_summary(self):
         """Print a human-readable system summary"""
