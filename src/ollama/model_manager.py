@@ -372,8 +372,11 @@ class ModelManager:
         results = []
         for m in raw_list:
             # We construct info from list response + parsing
+            # Ollama API response format might vary (name vs model)
+            name = m.get('name') or m.get('model') or "unknown"
+            
             results.append(ModelInfo(
-                name=m['name'],
+                name=name,
                 size=str(m.get('size', 0)),
                 quantization=m.get('details', {}).get('quantization_level', 'unknown'),
                 modified_at=m.get('modified_at', ''),

@@ -139,7 +139,7 @@ class ChatWindow(QMainWindow):
                 background-color: #cccccc;
             }
         """)
-        self.send_button.clicked.connect(lambda: asyncio.create_task(self.send_message()))
+        self.send_button.clicked.connect(self.send_message)
         input_layout.addWidget(self.send_button)
         
         input_widget = QWidget()

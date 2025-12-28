@@ -167,9 +167,17 @@ git clone https://github.com/yourusername/computer-manager.git
 cd computer-manager
 
 # 2. Set up your environment
-python -m venv venv
+### Running from Source
 
-# 3. Activate
+If you prefer to run from source or encounter issues with the executable:
+
+1.  Run the `run.bat` script in the project root.
+    *   This will automatically set up the environment and start the application.
+
+Or manually:
+```bash
+# Create and activate virtual environment
+python -m venv venv
 # Windows:
 venv\Scripts\activate
 # Linux/Mac:

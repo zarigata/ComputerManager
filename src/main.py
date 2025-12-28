@@ -139,9 +139,22 @@ def main():
         
         # Add file handler now that config is loaded and log_dir exists
         log_file = config.log_dir / "app.log"
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-        logging.getLogger().addHandler(file_handler)
+        handlers = []
+        
+        # 1. Main log file in config dir (e.g. ~/.computer-manager/logs/app.log)
+        handlers.append(logging.FileHandler(log_file))
+        
+        # 2. Local log file if logs/ directory exists in CWD
+        local_logs = Path("logs")
+        if local_logs.exists() and local_logs.is_dir():
+            handlers.append(logging.FileHandler(local_logs / "app.log"))
+            
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        root_logger = logging.getLogger()
+        
+        for handler in handlers:
+            handler.setFormatter(formatter)
+            root_logger.addHandler(handler)
         
         logger.info("Configuration loaded")
         

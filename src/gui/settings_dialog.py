@@ -158,14 +158,14 @@ class SettingsDialog(QDialog):
         download_layout.addWidget(self.download_model_input)
         
         self.download_button = QPushButton("Download")
-        self.download_button.clicked.connect(lambda: asyncio.create_task(self._download_model()))
+        self.download_button.clicked.connect(self._download_model)
         download_layout.addWidget(self.download_button)
         
         layout.addLayout(download_layout)
         
         # Refresh models button
         self.refresh_models_button = QPushButton("Refresh Model List")
-        self.refresh_models_button.clicked.connect(lambda: asyncio.create_task(self._refresh_models()))
+        self.refresh_models_button.clicked.connect(self._refresh_models)
         layout.addWidget(self.refresh_models_button)
         
         layout.addStretch()
@@ -279,7 +279,7 @@ class SettingsDialog(QDialog):
         
         # Test connection button
         self.test_connection_button = QPushButton("Test Connection")
-        self.test_connection_button.clicked.connect(lambda: asyncio.create_task(self._test_connection()))
+        self.test_connection_button.clicked.connect(self._test_connection)
         layout.addRow(self.test_connection_button)
         
         self.tab_widget.addTab(tab, "Advanced")
@@ -338,7 +338,7 @@ class SettingsDialog(QDialog):
         self.close_to_tray_check.setChecked(self.config.close_to_tray)
         
         # Models tab - populate with installed models
-        asyncio.create_task(self._refresh_models())
+        self._refresh_models()
         
         # Security tab
         permission = self.config.permission_level
