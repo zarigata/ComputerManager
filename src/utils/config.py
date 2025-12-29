@@ -31,6 +31,7 @@ class AppConfig:
     model_quantization: str = "Q4_K_M"
     auto_download_models: bool = False
     preferred_model_size: str = "auto"
+    performance_profile: str = "auto"  # auto, low, medium, high
     
     # GUI Configuration
     window_width: int = 800
@@ -114,6 +115,7 @@ class ConfigManager:
 
         self.config.auto_download_models = os.getenv("AUTO_DOWNLOAD_MODELS", "false").lower() == "true"
         self.config.preferred_model_size = os.getenv("PREFERRED_MODEL_SIZE", self.config.preferred_model_size)
+        self.config.performance_profile = os.getenv("PERFORMANCE_PROFILE", self.config.performance_profile)
         
         self.config.window_width = int(os.getenv("WINDOW_WIDTH", self.config.window_width))
         self.config.window_height = int(os.getenv("WINDOW_HEIGHT", self.config.window_height))

@@ -4,9 +4,9 @@ Follow this checklist for every new release of Computer Manager.
 
 ## Pre-release
 
-- [ ] **Update Version**: Bump version number in `pyproject.toml` (if present) or source code.
-- [ ] **Changelog**: Update `CHANGELOG.md` with new features, fixes, and improvements.
-- [ ] **Test Locally**: Run full test suite: `pytest tests/`.
+- [ ] **Verify Tests Pass Locally**: Run full test suite: `pytest tests/ -v`.
+- [ ] **Update Version**: Bump version number in `pyproject.toml`.
+- [ ] **Update CHANGELOG**: Update `CHANGELOG.md` with version number and release date (YYYY-MM-DD format).
 - [ ] **Build Check**: Run local build scripts for your platform to verify buildability.
 - [ ] **Documentation**: Ensure `README.md` and `docs/` are up to date.
 
@@ -21,13 +21,18 @@ Follow this checklist for every new release of Computer Manager.
    git push origin v1.0.0
    ```
 3. **Monitor**: Watch the GitHub Actions 'Build and Release' workflow.
-4. **Verify Artifacts**: unexpected failures should be investigated.
+   - Tests will run automatically (pytest with asyncio support)
+   - CHANGELOG will be validated for version entry
+   - Builds will be created for all three platforms
+   - SHA256 checksums will be generated automatically
+4. **Verify Artifacts**: Check that all platform builds completed successfully.
 5. **Release Notes**:
-   - Go to the Releases page on GitHub.
-   - Edit the auto-created release.
-   - Paste the relevant section from `CHANGELOG.md`.
+   - Release notes are auto-generated from commits
+   - Go to the Releases page on GitHub
+   - Edit the release to enhance auto-generated notes with highlights from `CHANGELOG.md`
 
 ## Post-Release
 
-- [ ] **Verify Download**: Download the artifacts and test them on a clean environment if possible.
+- [ ] **Verify Checksums**: Download `.sha256` files and verify artifact integrity.
+- [ ] **Test Artifacts**: Download the artifacts and test them on a clean environment if possible.
 - [ ] **Announce**: Share the release availability.

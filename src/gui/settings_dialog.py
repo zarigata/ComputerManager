@@ -133,6 +133,27 @@ class SettingsDialog(QDialog):
         
         tier_label = QLabel(f"<b>Detected Hardware Tier:</b> {hardware_tier.upper()}")
         layout.addWidget(tier_label)
+
+        # Performance Profile Selection
+        profile_group = QGroupBox("Performance Profile")
+        profile_layout = QFormLayout()
+
+        self.profile_combo = QComboBox()
+        self.profile_combo.addItems(["Auto", "Low", "Medium", "High"])
+        self.profile_combo.currentTextChanged.connect(self._on_profile_changed)
+        profile_layout.addRow("Active Profile:", self.profile_combo)
+
+        self.preset_preview_label = QLabel("Recommended: ...")
+        self.preset_preview_label.setWordWrap(True)
+        self.preset_preview_label.setStyleSheet("color: gray;")
+        profile_layout.addRow("Preset Preview:", self.preset_preview_label)
+        
+        self.apply_preset_button = QPushButton("Download & Apply Preset")
+        self.apply_preset_button.clicked.connect(self._apply_profile_preset)
+        profile_layout.addRow("", self.apply_preset_button)
+
+        profile_group.setLayout(profile_layout)
+        layout.addWidget(profile_group)
         
         # Model selection
         model_group = QGroupBox("Model Selection")
@@ -338,7 +359,9 @@ class SettingsDialog(QDialog):
         self.close_to_tray_check.setChecked(self.config.close_to_tray)
         
         # Models tab - populate with installed models
+        # Models tab - populate with installed models
         self._refresh_models()
+        self._load_profile_settings()
         
         # Security tab
         permission = self.config.permission_level
@@ -611,6 +634,9 @@ class SettingsDialog(QDialog):
         if vision_model and vision_model != "No vision models installed":
             self.config.default_vision_model = vision_model
         
+        self.config.auto_download_models = self.auto_download_check.isChecked()
+        self.config.performance_profile = self.profile_combo.currentText().lower()
+        
         # Security settings
         self.config.permission_level = self.permission_combo.currentText().lower()
         self.config.require_confirmation = self.require_confirmation_check.isChecked()
@@ -666,3 +692,78 @@ class SettingsDialog(QDialog):
                     "pip install -e .[langchain]"
                 )
                 self.langchain_enabled_check.setChecked(False)
+
+    def _load_profile_settings(self):
+        """Load profile settings and update preview."""
+        current_profile = self.config.performance_profile.capitalize()
+        index = self.profile_combo.findText(current_profile)
+        if index >= 0:
+            self.profile_combo.setCurrentIndex(index)
+        self._on_profile_changed(current_profile)
+
+    def _on_profile_changed(self, text):
+        """Update preview label when profile changes."""
+        profile = text.lower()
+        if profile == "auto":
+            profile = None # Let manager auto-detect
+        
+        recs = self.model_manager.get_recommended_models(tier=profile)
+        self.preset_preview_label.setText(
+            f"Text: {recs['text']}\n"
+            f"Vision: {recs['vision']}"
+        )
+
+    @asyncSlot()
+    async def _apply_profile_preset(self):
+        """Download and apply the preset models for the selected profile."""
+        profile = self.profile_combo.currentText().lower()
+        if profile == "auto":
+            profile = None
+
+        recs = self.model_manager.get_recommended_models(tier=profile)
+        
+        # models to ensure
+        models = [recs['text'], recs['vision']]
+        
+        # Disable button
+        self.apply_preset_button.setEnabled(False)
+        self.apply_preset_button.setText("Processing...")
+        
+        try:
+            for model in models:
+                if not model: continue
+                
+                # Check if installed
+                installed = await self.model_manager.check_models_installed()
+                is_installed = False
+                # Simple check against installed dict keys which are recommendations
+                # But here 'model' is the full name. 
+                # Let's just use download_model which handles pulling if needed
+                
+                # Create progress dialog because download_model might take time
+                progress = QProgressDialog(f"Ensuring {model}...", "Cancel", 0, 0, self)
+                progress.setWindowModality(Qt.WindowModality.WindowModal)
+                progress.show()
+                
+                await self.model_manager.download_model(model)
+                progress.close()
+            
+            # Refresh list
+            await self._refresh_models()
+            
+            # Select them in combos
+            index = self.text_model_combo.findText(recs['text'])
+            if index >= 0: self.text_model_combo.setCurrentIndex(index)
+            
+            index = self.vision_model_combo.findText(recs['vision'])
+            if index >= 0: self.vision_model_combo.setCurrentIndex(index)
+            
+            QMessageBox.information(self, "Success", "Profile preset downloaded and applied!")
+            
+        except Exception as e:
+            logger.error(f"Failed to apply preset: {e}")
+            QMessageBox.critical(self, "Error", f"Failed to apply preset: {e}")
+            
+        finally:
+            self.apply_preset_button.setEnabled(True)
+            self.apply_preset_button.setText("Download & Apply Preset")

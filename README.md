@@ -136,7 +136,7 @@ Since this runs **locally**, your hardware dictates performance.
 
 ### Option 1: Download Pre-built Binaries (Recommended)
 
-Download the latest release for your platform from the [Releases](https://github.com/yourusername/computer-manager/releases) page.
+Download the latest release for your platform from the [Releases](https://github.com/zarigata/ComputerManager/releases) page.
 
 #### Windows
 1. Download `ComputerManager-Windows-x64.exe`
@@ -163,8 +163,8 @@ Download the latest release for your platform from the [Releases](https://github
 
 ```bash
 # 1. Clone the repo (you know the drill)
-git clone https://github.com/yourusername/computer-manager.git
-cd computer-manager
+git clone https://github.com/zarigata/ComputerManager.git
+cd ComputerManager
 
 # 2. Set up your environment
 ### Running from Source

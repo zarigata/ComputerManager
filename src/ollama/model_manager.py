@@ -98,9 +98,25 @@ class ModelManager:
             # No tag, append default tag and quantization
             return f"{base_name}:latest" # Fallback if just base name given
 
-    def get_recommended_models(self) -> Dict[str, str]:
-        """Get recommended models for the current hardware with quantization"""
-        tier_models = self.RECOMMENDED_MODELS.get(self.hardware_tier, self.RECOMMENDED_MODELS["low"])
+    
+    def get_recommended_models(self, tier: Optional[str] = None) -> Dict[str, str]:
+        """
+        Get recommended models for the current hardware or specified tier
+        
+        Args:
+            tier: Optional tier to force (low, medium, high). 
+                  If None, checks config.performance_profile, then auto-detects.
+        """
+        if not tier:
+            # Check config for override
+            tier = self.config.performance_profile
+            
+            # If auto or invalid, use detected hardware tier
+            if not tier or tier == "auto" or tier not in self.RECOMMENDED_MODELS:
+                tier = self.hardware_tier
+        
+        # Default to low if something goes wrong
+        tier_models = self.RECOMMENDED_MODELS.get(tier, self.RECOMMENDED_MODELS["low"])
         
         return {
             "text": self.get_model_with_quantization(tier_models["text"]),
@@ -166,7 +182,8 @@ class ModelManager:
         Returns dict with status for each model type
         """
         installed_models = await self.client.list_models()
-        installed_names = [m['name'] for m in installed_models]
+        # Handle cases where key might be 'model' instead of 'name'
+        installed_names = [m.get('name') or m.get('model') for m in installed_models]
         
         active_models = await self.get_active_models()
         results = {}

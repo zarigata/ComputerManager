@@ -26,8 +26,9 @@ opencv-python>=4.8.0  # Required for confidence-based image matching
 pyuac>=0.0.3; sys_platform == 'win32'  # Windows UAC elevation
 PyXA>=0.1.0; sys_platform == 'darwin'  # macOS automation
 
-# Development Dependencies (optional)
+# Testing (required for CI/CD)
 pytest>=7.4.0
+pytest-asyncio>=0.21.0
 black>=23.0.0
 ruff>=0.1.0
 
@@ -38,3 +39,6 @@ langchain-community>=0.0.20
 wikipedia>=1.4.0
 duckduckgo-search>=4.0.0
 pyinstaller>=6.0.0
+
+# Build System
+icnsutil>=1.0.0

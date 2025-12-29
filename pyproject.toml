@@ -51,10 +51,11 @@ langchain = [
     "duckduckgo-search>=4.0.0",
 ]
 
+# Update YOUR_USERNAME with your actual GitHub username
 [project.urls]
-Homepage = "https://github.com/yourusername/computer-manager"
-Repository = "https://github.com/yourusername/computer-manager"
-Issues = "https://github.com/yourusername/computer-manager/issues"
+Homepage = "https://github.com/YOUR_USERNAME/computer-manager"
+Repository = "https://github.com/YOUR_USERNAME/computer-manager"
+Issues = "https://github.com/YOUR_USERNAME/computer-manager/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
